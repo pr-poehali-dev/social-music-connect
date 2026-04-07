@@ -1,5 +1,6 @@
 import Icon from "@/components/ui/icon";
 import { AVATAR_ME, friends, musicRecs, navItems } from "./data";
+import { PlayerControls, PlayerState } from "./useAudioPlayer";
 
 interface SidebarProps {
   active: string;
@@ -63,10 +64,11 @@ export function Sidebar({ active, setActive, onToggle }: SidebarProps) {
 }
 
 interface RightSidebarProps {
-  setPlayingTrack: (id: number) => void;
+  playerControls: PlayerControls;
+  playerState: PlayerState;
 }
 
-export function RightSidebar({ setPlayingTrack }: RightSidebarProps) {
+export function RightSidebar({ playerControls, playerState }: RightSidebarProps) {
   return (
     <aside className="w-72 h-screen sticky top-0 flex flex-col glass border-l border-white/5 overflow-y-auto scrollbar-hide flex-shrink-0">
       <div className="p-4 space-y-4">
@@ -97,20 +99,32 @@ export function RightSidebar({ setPlayingTrack }: RightSidebarProps) {
             <button className="text-xs text-neon-purple hover:text-neon-pink transition-colors">Все</button>
           </div>
           <div className="space-y-2">
-            {musicRecs.map(track => (
-              <div key={track.id} className="flex items-center gap-2.5 cursor-pointer group" onClick={() => setPlayingTrack(track.id)}>
-                <div className="w-9 h-9 rounded-lg overflow-hidden flex-shrink-0">
-                  <img src={track.cover} alt={track.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform" />
+            {musicRecs.map(track => {
+              const isPlaying = playerState.trackId === track.id && playerState.isPlaying;
+              return (
+                <div key={track.id} className="flex items-center gap-2.5 cursor-pointer group" onClick={() => playerControls.toggle(track.id)}>
+                  <div className="relative w-9 h-9 rounded-lg overflow-hidden flex-shrink-0">
+                    <img src={track.cover} alt={track.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform" />
+                    {isPlaying && (
+                      <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
+                        <div className="flex gap-0.5 items-end h-3">
+                          {[2, 3, 1].map((h, i) => (
+                            <div key={i} className="w-0.5 gradient-bg rounded-full animate-pulse" style={{ height: `${h * 3}px`, animationDelay: `${i * 0.15}s` }} />
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className={`text-xs font-semibold truncate ${isPlaying ? "text-neon-purple" : "text-white/80"}`}>{track.title}</p>
+                    <p className="text-[10px] text-white/40 truncate">{track.artist}</p>
+                  </div>
+                  <button className="opacity-0 group-hover:opacity-100 transition-opacity text-neon-purple">
+                    <Icon name={isPlaying ? "Pause" : "Play"} size={14} />
+                  </button>
                 </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-xs font-semibold text-white/80 truncate">{track.title}</p>
-                  <p className="text-[10px] text-white/40 truncate">{track.artist}</p>
-                </div>
-                <button className="opacity-0 group-hover:opacity-100 transition-opacity text-neon-purple">
-                  <Icon name="Play" size={14} />
-                </button>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
 

@@ -44,9 +44,30 @@ export const posts = [
 ];
 
 export const musicRecs = [
-  { id: 1, title: "Pulse", artist: "MANIZHA", cover: MUSIC_IMG, duration: "3:24" },
-  { id: 2, title: "Бесконечность", artist: "Miyagi & Эндшпиль", cover: MUSIC_IMG, duration: "4:12" },
-  { id: 3, title: "Neon Dreams", artist: "IC3PEAK", cover: MUSIC_IMG, duration: "2:58" },
+  {
+    id: 1,
+    title: "Elektronomia - Sky High",
+    artist: "Elektronomia",
+    cover: MUSIC_IMG,
+    duration: "4:19",
+    src: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3",
+  },
+  {
+    id: 2,
+    title: "Ambient Journey",
+    artist: "SoundHelix",
+    cover: MUSIC_IMG,
+    duration: "5:02",
+    src: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3",
+  },
+  {
+    id: 3,
+    title: "Neon Wave",
+    artist: "SoundHelix",
+    cover: MUSIC_IMG,
+    duration: "3:48",
+    src: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3",
+  },
 ];
 
 export const messages = [

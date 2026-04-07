@@ -2,6 +2,7 @@ import { useState } from "react";
 import Icon from "@/components/ui/icon";
 import { AVATAR_ME, POST_IMG, MUSIC_IMG, friends, stories, posts, musicRecs, messages } from "./data";
 import { ChatWindow } from "./ChatWindow";
+import { PlayerState, PlayerControls, formatTime } from "./useAudioPlayer";
 
 const MY_ID = "alexchernov";
 
@@ -11,8 +12,8 @@ interface MainContentProps {
   onToggleSidebar: () => void;
   postLikes: Record<number, boolean>;
   toggleLike: (id: number) => void;
-  playingTrack: number | null;
-  setPlayingTrack: (id: number | null) => void;
+  playerState: PlayerState;
+  playerControls: PlayerControls;
   searchQuery: string;
   setSearchQuery: (q: string) => void;
   newPost: string;
@@ -27,8 +28,8 @@ export function MainContent({
   onToggleSidebar,
   postLikes,
   toggleLike,
-  playingTrack,
-  setPlayingTrack,
+  playerState,
+  playerControls,
   searchQuery,
   setSearchQuery,
   newPost,
@@ -275,109 +276,115 @@ export function MainContent({
 
       {/* ── МУЗЫКА ── */}
       {active === "music" && (
-        <div className="max-w-2xl mx-auto px-4 py-6 animate-fade-in">
+        <div className="max-w-2xl mx-auto px-4 py-6 pb-24 animate-fade-in">
           <div className="mb-6">
             <h2 className="font-golos font-bold text-2xl text-white mb-1">Музыка</h2>
             <p className="text-sm text-white/40">Персональные рекомендации на основе вкусов</p>
           </div>
 
-          {playingTrack && (
+          {/* Большой плеер — если что-то играет */}
+          {playerState.trackId ? (
             <div className="relative rounded-2xl overflow-hidden mb-6 animate-scale-in">
-              <img src={MUSIC_IMG} alt="cover" className="w-full h-52 object-cover" />
+              <img src={musicRecs.find(t => t.id === playerState.trackId)?.cover ?? MUSIC_IMG} alt="cover" className="w-full h-52 object-cover" />
               <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/40 to-transparent" />
               <div className="absolute bottom-0 left-0 right-0 p-5">
-                <div className="flex items-end justify-between">
+                <div className="flex items-end justify-between mb-3">
                   <div>
                     <p className="text-[10px] text-neon-purple font-semibold tracking-widest uppercase mb-1">Сейчас играет</p>
-                    <p className="text-white font-bold text-lg font-golos">
-                      {musicRecs.find(t => t.id === playingTrack)?.title ?? "Бесконечность"}
-                    </p>
-                    <p className="text-white/60 text-sm">
-                      {musicRecs.find(t => t.id === playingTrack)?.artist ?? "Miyagi & Эндшпиль"}
-                    </p>
+                    <p className="text-white font-bold text-lg font-golos">{musicRecs.find(t => t.id === playerState.trackId)?.title}</p>
+                    <p className="text-white/60 text-sm">{musicRecs.find(t => t.id === playerState.trackId)?.artist}</p>
                   </div>
                   <div className="flex items-center gap-3">
-                    <button
-                      onClick={() => setPlayingTrack(playingTrack > 1 ? playingTrack - 1 : musicRecs.length)}
-                      className="text-white/50 hover:text-white transition-colors"
-                    >
+                    <button onClick={playerControls.prev} className="text-white/50 hover:text-white transition-colors">
                       <Icon name="SkipBack" size={20} />
                     </button>
                     <button
-                      onClick={() => setPlayingTrack(null)}
+                      onClick={() => playerState.isPlaying ? playerControls.pause() : playerControls.play(playerState.trackId!)}
                       className="w-12 h-12 gradient-bg rounded-full flex items-center justify-center glow hover:scale-105 transition-transform"
                     >
-                      <Icon name="Pause" size={20} className="text-white" />
+                      <Icon name={playerState.isPlaying ? "Pause" : "Play"} size={20} className="text-white" />
                     </button>
-                    <button
-                      onClick={() => setPlayingTrack(playingTrack < musicRecs.length ? playingTrack + 1 : 1)}
-                      className="text-white/50 hover:text-white transition-colors"
-                    >
+                    <button onClick={playerControls.next} className="text-white/50 hover:text-white transition-colors">
                       <Icon name="SkipForward" size={20} />
                     </button>
                   </div>
                 </div>
-                <div className="mt-3">
-                  <div className="h-1 bg-white/20 rounded-full cursor-pointer" onClick={() => showToast("Перемотка трека")}>
-                    <div className="h-full w-2/5 gradient-bg rounded-full" />
+                {/* Прогресс с перемоткой */}
+                <div className="flex items-center gap-2">
+                  <span className="text-[10px] text-white/40 tabular-nums w-8">{formatTime(playerState.currentTime)}</span>
+                  <div
+                    className="flex-1 h-1.5 bg-white/20 rounded-full cursor-pointer"
+                    onClick={e => {
+                      const rect = e.currentTarget.getBoundingClientRect();
+                      playerControls.seek((e.clientX - rect.left) / rect.width);
+                    }}
+                  >
+                    <div className="h-full gradient-bg rounded-full transition-none" style={{ width: `${playerState.progress * 100}%` }} />
                   </div>
+                  <span className="text-[10px] text-white/40 tabular-nums w-8 text-right">{formatTime(playerState.duration)}</span>
                 </div>
               </div>
             </div>
-          )}
-
-          {!playingTrack && (
+          ) : (
             <div
               className="glass-bright rounded-2xl p-5 mb-6 flex items-center justify-center gap-4 cursor-pointer hover:border-neon-purple/30 transition-all"
-              onClick={() => setPlayingTrack(2)}
+              onClick={() => playerControls.play(1)}
             >
               <div className="w-12 h-12 gradient-bg rounded-full flex items-center justify-center glow">
                 <Icon name="Play" size={20} className="text-white ml-0.5" />
               </div>
               <div>
-                <p className="text-sm text-white/60">Нажми, чтобы продолжить</p>
-                <p className="text-xs text-neon-purple">Бесконечность — Miyagi & Эндшпиль</p>
+                <p className="text-sm text-white/60">Нажми, чтобы начать</p>
+                <p className="text-xs text-neon-purple">{musicRecs[0].title} — {musicRecs[0].artist}</p>
               </div>
             </div>
           )}
 
           <h3 className="font-golos font-semibold text-white mb-3">Рекомендации для тебя</h3>
           <div className="space-y-2">
-            {musicRecs.map((track, i) => (
-              <div
-                key={track.id}
-                className={`glass-bright rounded-2xl p-3 flex items-center gap-3 cursor-pointer transition-all hover:border-neon-purple/20 animate-fade-up
-                  ${playingTrack === track.id ? "border-neon-purple/30 bg-neon-purple/5" : ""}`}
-                style={{ animationDelay: `${i * 0.08}s` }}
-                onClick={() => setPlayingTrack(track.id === playingTrack ? null : track.id)}
-              >
-                <div className="relative w-12 h-12 rounded-xl overflow-hidden flex-shrink-0">
-                  <img src={track.cover} alt={track.title} className="w-full h-full object-cover" />
-                  {playingTrack === track.id && (
-                    <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
-                      <div className="flex gap-0.5 items-end h-5">
-                        {[3, 5, 2, 4].map((h, j) => (
-                          <div key={j} className="w-1 gradient-bg rounded-full animate-pulse" style={{ height: `${h * 3}px` }} />
-                        ))}
+            {musicRecs.map((track, i) => {
+              const isActive = playerState.trackId === track.id;
+              const isPlaying = isActive && playerState.isPlaying;
+              return (
+                <div
+                  key={track.id}
+                  className={`glass-bright rounded-2xl p-3 flex items-center gap-3 cursor-pointer transition-all hover:border-neon-purple/20 animate-fade-up
+                    ${isActive ? "border-neon-purple/30 bg-neon-purple/5" : ""}`}
+                  style={{ animationDelay: `${i * 0.08}s` }}
+                  onClick={() => playerControls.toggle(track.id)}
+                >
+                  <div className="relative w-12 h-12 rounded-xl overflow-hidden flex-shrink-0">
+                    <img src={track.cover} alt={track.title} className="w-full h-full object-cover" />
+                    {isActive && (
+                      <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
+                        {isPlaying ? (
+                          <div className="flex gap-0.5 items-end h-5">
+                            {[3, 5, 2, 4].map((h, j) => (
+                              <div key={j} className="w-1 gradient-bg rounded-full animate-pulse" style={{ height: `${h * 3}px` }} />
+                            ))}
+                          </div>
+                        ) : (
+                          <Icon name="Play" size={16} className="text-white ml-0.5" />
+                        )}
                       </div>
-                    </div>
-                  )}
+                    )}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className={`text-sm font-semibold truncate ${isActive ? "text-neon-purple" : "text-white"}`}>{track.title}</p>
+                    <p className="text-xs text-white/40 truncate">{track.artist}</p>
+                  </div>
+                  <div className="flex items-center gap-3 flex-shrink-0">
+                    <span className="text-xs text-white/30">{track.duration}</span>
+                    <button
+                      className={`transition-colors ${likedTracks.includes(track.id) ? "text-neon-pink" : "text-white/30 hover:text-neon-pink"}`}
+                      onClick={e => { e.stopPropagation(); toggleLikeTrack(track.id); showToast(likedTracks.includes(track.id) ? "Убрано из понравившихся" : "Добавлено в понравившиеся"); }}
+                    >
+                      <Icon name="Heart" size={14} />
+                    </button>
+                  </div>
                 </div>
-                <div className="flex-1 min-w-0">
-                  <p className={`text-sm font-semibold truncate ${playingTrack === track.id ? "text-neon-purple" : "text-white"}`}>{track.title}</p>
-                  <p className="text-xs text-white/40 truncate">{track.artist}</p>
-                </div>
-                <div className="flex items-center gap-3 flex-shrink-0">
-                  <span className="text-xs text-white/30">{track.duration}</span>
-                  <button
-                    className={`transition-colors ${likedTracks.includes(track.id) ? "text-neon-pink" : "text-white/30 hover:text-neon-pink"}`}
-                    onClick={e => { e.stopPropagation(); toggleLikeTrack(track.id); showToast(likedTracks.includes(track.id) ? "Убрано из понравившихся" : "Добавлено в понравившиеся"); }}
-                  >
-                    <Icon name="Heart" size={14} />
-                  </button>
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
 
           <div className="mt-4 glass rounded-2xl p-4 flex items-center gap-3 border border-neon-blue/20">
