@@ -1,5 +1,9 @@
+import { useState } from "react";
 import Icon from "@/components/ui/icon";
 import { AVATAR_ME, POST_IMG, MUSIC_IMG, friends, stories, posts, musicRecs, messages } from "./data";
+import { ChatWindow } from "./ChatWindow";
+
+const MY_ID = "alexchernov";
 
 interface MainContentProps {
   active: string;
@@ -193,51 +197,7 @@ export function MainContent({
       )}
 
       {/* ── СООБЩЕНИЯ ── */}
-      {active === "messages" && (
-        <div className="max-w-2xl mx-auto px-4 py-6 animate-fade-in">
-          <div className="flex items-center justify-between mb-6">
-            <div>
-              <h2 className="font-golos font-bold text-2xl text-white">Сообщения</h2>
-              <p className="text-sm text-white/40">4 непрочитанных</p>
-            </div>
-            <button className="gradient-bg text-white p-2.5 rounded-xl hover:scale-105 transition-transform glow">
-              <Icon name="Plus" size={18} />
-            </button>
-          </div>
-          <div className="relative mb-4">
-            <Icon name="Search" size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-white/30" />
-            <input
-              placeholder="Поиск по чатам..."
-              className="w-full glass rounded-xl pl-10 pr-4 py-3 text-sm text-white placeholder:text-white/30 outline-none"
-            />
-          </div>
-          <div className="space-y-2">
-            {messages.map((msg, i) => (
-              <div key={msg.id} className="glass-bright rounded-2xl p-4 flex items-center gap-3 cursor-pointer hover:border-neon-purple/20 transition-all animate-fade-up"
-                style={{ animationDelay: `${i * 0.06}s` }}>
-                <div className="relative flex-shrink-0">
-                  <div className={msg.unread > 0 ? "story-ring w-12 h-12" : "w-12 h-12"}>
-                    <img src={msg.avatar} alt={msg.name}
-                      className={`object-cover rounded-full ${msg.unread > 0 ? "w-[44px] h-[44px] m-[2px]" : "w-full h-full"}`} />
-                  </div>
-                  {msg.unread > 0 && (
-                    <span className="absolute -top-1 -right-1 text-[10px] bg-neon-pink text-white rounded-full w-4 h-4 flex items-center justify-center font-bold">
-                      {msg.unread}
-                    </span>
-                  )}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center justify-between mb-0.5">
-                    <p className={`text-sm font-semibold ${msg.unread > 0 ? "text-white" : "text-white/70"}`}>{msg.name}</p>
-                    <span className="text-[10px] text-white/30">{msg.time}</span>
-                  </div>
-                  <p className="text-xs text-white/40 truncate">{msg.text}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
+      {active === "messages" && <MessagesSection myId={MY_ID} />}
 
       {/* ── МУЗЫКА ── */}
       {active === "music" && (
@@ -466,5 +426,69 @@ export function MainContent({
         </div>
       )}
     </main>
+  );
+}
+
+// ── Раздел сообщений с реальным чатом ──
+function MessagesSection({ myId }: { myId: string }) {
+  const [openContact, setOpenContact] = useState<{ id: string; name: string; avatar: string } | null>(null);
+
+  if (openContact) {
+    return (
+      <div className="flex-1 animate-fade-in">
+        <ChatWindow contact={openContact} myId={myId} onBack={() => setOpenContact(null)} />
+      </div>
+    );
+  }
+
+  return (
+    <div className="max-w-2xl mx-auto px-4 py-6 animate-fade-in">
+      <div className="flex items-center justify-between mb-6">
+        <div>
+          <h2 className="font-golos font-bold text-2xl text-white">Сообщения</h2>
+          <p className="text-sm text-white/40">Реальный чат в реальном времени</p>
+        </div>
+        <button className="gradient-bg text-white p-2.5 rounded-xl hover:scale-105 transition-transform glow">
+          <Icon name="Plus" size={18} />
+        </button>
+      </div>
+      <div className="relative mb-4">
+        <Icon name="Search" size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-white/30" />
+        <input
+          placeholder="Поиск по чатам..."
+          className="w-full glass rounded-xl pl-10 pr-4 py-3 text-sm text-white placeholder:text-white/30 outline-none"
+        />
+      </div>
+      <div className="space-y-2">
+        {messages.map((msg, i) => (
+          <div
+            key={msg.id}
+            onClick={() => setOpenContact({ id: msg.id.toString(), name: msg.name, avatar: msg.avatar })}
+            className="glass-bright rounded-2xl p-4 flex items-center gap-3 cursor-pointer hover:border-neon-purple/20 transition-all animate-fade-up"
+            style={{ animationDelay: `${i * 0.06}s` }}
+          >
+            <div className="relative flex-shrink-0">
+              <div className={msg.unread > 0 ? "story-ring w-12 h-12" : "w-12 h-12"}>
+                <img src={msg.avatar} alt={msg.name}
+                  className={`object-cover rounded-full ${msg.unread > 0 ? "w-[44px] h-[44px] m-[2px]" : "w-full h-full"}`} />
+              </div>
+              {msg.unread > 0 && (
+                <span className="absolute -top-1 -right-1 text-[10px] bg-neon-pink text-white rounded-full w-4 h-4 flex items-center justify-center font-bold">
+                  {msg.unread}
+                </span>
+              )}
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center justify-between mb-0.5">
+                <p className={`text-sm font-semibold ${msg.unread > 0 ? "text-white" : "text-white/70"}`}>{msg.name}</p>
+                <span className="text-[10px] text-white/30">{msg.time}</span>
+              </div>
+              <p className="text-xs text-white/40 truncate">{msg.text}</p>
+            </div>
+            <Icon name="ChevronRight" size={14} className="text-white/20 flex-shrink-0" />
+          </div>
+        ))}
+      </div>
+    </div>
   );
 }

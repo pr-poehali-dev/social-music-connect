@@ -1,0 +1,30 @@
+{
+  "tests": [
+    {
+      "name": "Create room",
+      "method": "POST",
+      "path": "/?action=room",
+      "body": {"user1_id": "alice", "user2_id": "bob"},
+      "expectedStatus": 200,
+      "expectedBody": {"room_id": 1},
+      "bodyMatcher": "partial"
+    },
+    {
+      "name": "Send message",
+      "method": "POST",
+      "path": "/",
+      "body": {"room_id": 1, "sender_id": "alice", "text": "Привет!"},
+      "expectedStatus": 200,
+      "expectedBody": {"id": 2},
+      "bodyMatcher": "partial"
+    },
+    {
+      "name": "Get messages",
+      "method": "GET",
+      "path": "/?room_id=1&since_id=0",
+      "expectedStatus": 200,
+      "bodyMatcher": "partial",
+      "expectedBody": {"messages": []}
+    }
+  ]
+}
