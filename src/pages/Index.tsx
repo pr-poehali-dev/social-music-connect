@@ -4,6 +4,7 @@ import { MainContent } from "@/components/social/MainContent";
 
 export default function Index() {
   const [active, setActive] = useState("feed");
+  const [sidebarOpen, setSidebarOpen] = useState(true);
   const [postLikes, setPostLikes] = useState<Record<number, boolean>>({ 2: true });
   const [playingTrack, setPlayingTrack] = useState<number | null>(2);
   const [searchQuery, setSearchQuery] = useState("");
@@ -15,11 +16,19 @@ export default function Index() {
   };
 
   return (
-    <div className="min-h-screen bg-mesh font-rubik flex">
-      <Sidebar active={active} setActive={setActive} />
+    <div className="min-h-screen bg-mesh font-rubik flex overflow-hidden">
+      {/* Sidebar с анимацией */}
+      <div
+        className="flex-shrink-0 transition-all duration-300 ease-in-out overflow-hidden"
+        style={{ width: sidebarOpen ? "256px" : "0px" }}
+      >
+        <Sidebar active={active} setActive={setActive} onToggle={() => setSidebarOpen(false)} />
+      </div>
 
       <MainContent
         active={active}
+        sidebarOpen={sidebarOpen}
+        onToggleSidebar={() => setSidebarOpen(o => !o)}
         postLikes={postLikes}
         toggleLike={toggleLike}
         playingTrack={playingTrack}

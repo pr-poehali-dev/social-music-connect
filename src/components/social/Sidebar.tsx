@@ -4,18 +4,27 @@ import { AVATAR_ME, friends, musicRecs, navItems } from "./data";
 interface SidebarProps {
   active: string;
   setActive: (id: string) => void;
-  setPlayingTrack: (id: number) => void;
+  onToggle: () => void;
 }
 
-export function Sidebar({ active, setActive }: Omit<SidebarProps, "setPlayingTrack">) {
+export function Sidebar({ active, setActive, onToggle }: SidebarProps) {
   return (
     <aside className="w-64 h-screen sticky top-0 flex flex-col glass border-r border-white/5 z-20">
-      <div className="px-6 py-6 border-b border-white/5">
-        <h1 className="font-golos font-black text-2xl neon-text tracking-tight">Вспышка</h1>
-        <p className="text-xs text-white/40 mt-0.5">соцсеть нового поколения</p>
+      <div className="px-6 py-6 border-b border-white/5 flex items-center justify-between">
+        <div>
+          <h1 className="font-golos font-black text-2xl neon-text tracking-tight">Вспышка</h1>
+          <p className="text-xs text-white/40 mt-0.5">соцсеть нового поколения</p>
+        </div>
+        <button
+          onClick={onToggle}
+          className="text-white/30 hover:text-white/70 transition-colors p-1.5 rounded-lg hover:bg-white/5"
+          title="Свернуть меню"
+        >
+          <Icon name="PanelLeftClose" size={18} />
+        </button>
       </div>
 
-      <nav className="flex-1 px-3 py-4 space-y-1">
+      <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto scrollbar-hide">
         {navItems.map(item => (
           <button
             key={item.id}
@@ -59,7 +68,7 @@ interface RightSidebarProps {
 
 export function RightSidebar({ setPlayingTrack }: RightSidebarProps) {
   return (
-    <aside className="w-72 h-screen sticky top-0 flex flex-col glass border-l border-white/5 overflow-y-auto scrollbar-hide">
+    <aside className="w-72 h-screen sticky top-0 flex flex-col glass border-l border-white/5 overflow-y-auto scrollbar-hide flex-shrink-0">
       <div className="p-4 space-y-4">
         <div>
           <div className="flex items-center justify-between mb-3">
